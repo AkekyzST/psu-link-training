@@ -5,7 +5,7 @@ import { CircularProgress, Box } from '@mui/material';
 import useAuthStore from '../stores/auth';
 
 const ProtectedRoute: React.FC = () => {
-  const { isAuthenticated, isLoading, verifyAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, getProfile } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -14,7 +14,8 @@ const ProtectedRoute: React.FC = () => {
     const checkAuth = async () => {
       if (isAuthenticated) {
         // Verify with server to ensure cookies are still valid
-        const stillAuthenticated = await verifyAuth();
+        const user = await getProfile();
+        const stillAuthenticated = !!user;
         if (!stillAuthenticated) {
           navigate('/login', { state: { from: location }, replace: true });
         }
@@ -25,7 +26,7 @@ const ProtectedRoute: React.FC = () => {
     };
 
     checkAuth();
-  }, [isAuthenticated, isLoading, navigate, verifyAuth, location]);
+  }, [isAuthenticated, isLoading, navigate, getProfile, location]);
 
   // Show loading indicator while checking auth state
   if (isLoading) {

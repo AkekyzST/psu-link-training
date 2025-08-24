@@ -39,7 +39,7 @@ const getOrigin = () => {
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
-  return 'http://localhost:5173'; // Fallback for SSR
+  return 'http://localhost:5175'; // Fallback for SSR
 };
 
 // Disable debug logging in production

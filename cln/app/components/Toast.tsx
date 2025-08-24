@@ -2,10 +2,6 @@ import React, { useEffect } from 'react';
 import { useToastStore } from '../stores/toast';
 import type { ToastSeverity, ToastPosition } from '../stores/toast';
 import { Box, Typography } from '@mui/material';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import type { SxProps, Theme } from '@mui/material/styles';
 
 const Toast: React.FC = () => {
@@ -29,13 +25,13 @@ const Toast: React.FC = () => {
   const getIcon = () => {
     switch (severity) {
       case 'success':
-        return <CheckCircleOutline sx={{ color: 'white', fontSize: 20 }} />;
+        return <Typography sx={{ color: 'white', fontSize: 20 }}>✓</Typography>;
       case 'info':
-        return <InfoOutlined sx={{ color: 'white', fontSize: 20 }} />;
+        return <Typography sx={{ color: 'white', fontSize: 20 }}>ℹ</Typography>;
       case 'warning':
-        return <WarningAmberOutlined sx={{ color: 'white', fontSize: 20 }} />;
+        return <Typography sx={{ color: 'white', fontSize: 20 }}>⚠</Typography>;
       case 'error':
-        return <ErrorOutline sx={{ color: 'white', fontSize: 20 }} />;
+        return <Typography sx={{ color: 'white', fontSize: 20 }}>✕</Typography>;
       default:
         return null;
     }

@@ -5,5 +5,6 @@ export default [
   route("auth/callback", "routes/OidcCallbackPage.tsx"),
   layout("components/ProtectedRoute.tsx", [
     index("routes/home.tsx"),
+    route("dashboard", "routes/dashboard.tsx"),
   ]),
 ] satisfies RouteConfig;

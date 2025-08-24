@@ -55,7 +55,7 @@ npm run test:report
 
 The Playwright configuration is in `playwright.config.ts`. Key settings:
 
-- **Base URL**: `http://localhost:5173`
+- **Base URL**: `http://localhost:5175`
 - **Browsers**: Chrome, Firefox, Safari
 - **Web Server**: Automatically starts the dev server before tests
 - **Reports**: HTML reports are generated automatically

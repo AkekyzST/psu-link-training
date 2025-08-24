@@ -21,6 +21,11 @@ interface ToastState {
     position?: ToastPosition // Add position parameter
   ) => void;
   hideToast: () => void;
+  // Helper methods
+  showSuccess: (message: string, duration?: number) => void;
+  showError: (message: string, duration?: number) => void;
+  showWarning: (message: string, duration?: number) => void;
+  showInfo: (message: string, duration?: number) => void;
 }
 
 export const useToastStore = create<ToastState>((set) => ({
@@ -65,5 +70,22 @@ export const useToastStore = create<ToastState>((set) => ({
       // Only reset open and timeoutId on hide
       return { open: false, timeoutId: null }; 
     });
+  },
+  
+  // Helper methods
+  showSuccess: (message, duration = 5000) => {
+    useToastStore.getState().showToast(message, 'success', duration);
+  },
+  
+  showError: (message, duration = 5000) => {
+    useToastStore.getState().showToast(message, 'error', duration);
+  },
+  
+  showWarning: (message, duration = 5000) => {
+    useToastStore.getState().showToast(message, 'warning', duration);
+  },
+  
+  showInfo: (message, duration = 5000) => {
+    useToastStore.getState().showToast(message, 'info', duration);
   },
 })); 

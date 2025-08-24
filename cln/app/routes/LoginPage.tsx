@@ -14,7 +14,6 @@ import {
   InputAdornment,
   Divider
 } from '@mui/material';
-import { LockOutlined, PersonOutline, Login as LoginIcon } from '@mui/icons-material';
 import useAuthStore, { AUTH_ERRORS } from '../stores/auth';
 import { useToastStore } from '~/stores/toast';
 
@@ -114,7 +113,7 @@ const LoginPage: React.FC = () => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <PersonOutline />
+                        <Typography>👤</Typography>
                       </InputAdornment>
                     ),
                   },
@@ -141,7 +140,7 @@ const LoginPage: React.FC = () => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockOutlined />
+                        <Typography>🔒</Typography>
                       </InputAdornment>
                     ),
                   },
@@ -174,7 +173,7 @@ const LoginPage: React.FC = () => {
                 <Button
                   variant="outlined"
                   fullWidth
-                  startIcon={<LoginIcon />}
+                  startIcon={<Typography>💪</Typography>}
                   onClick={handleOidcLogin}
                   disabled={isLoading}
                 >

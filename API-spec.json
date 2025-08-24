@@ -1,0 +1,946 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/link-api": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": { "200": { "description": "" } },
+        "tags": ["App"]
+      }
+    },
+    "/link-api/links": {
+      "post": {
+        "operationId": "LinkController_createLink",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Link creation data",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateLinkDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Link created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Create a new shortened link",
+        "tags": ["links"]
+      },
+      "get": {
+        "operationId": "LinkController_getUserLinks",
+        "parameters": [
+          {
+            "name": "max",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of results",
+            "schema": { "default": 50, "example": 50, "type": "number" }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of records to skip",
+            "schema": { "default": 0, "example": 0, "type": "number" }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "default": "createdAt",
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": { "enum": ["ASC", "DESC"], "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of user links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LinkEntry" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Get user's links with pagination",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/{id}": {
+      "get": {
+        "description": "Retrieve detailed information about a specific shortened link. Only the owner or admin can access this endpoint.",
+        "operationId": "LinkController_getLinkById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique identifier of the link",
+            "schema": { "example": 1, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Access denied - not the owner or admin" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Get a specific link by ID",
+        "tags": ["links"]
+      },
+      "put": {
+        "description": "Update properties of an existing shortened link. Only the owner or admin can update the link.",
+        "operationId": "LinkController_updateLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique identifier of the link to update",
+            "schema": { "example": 1, "type": "number" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Link update data",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateLinkDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Link updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Access denied - not the owner or admin" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Update a shortened link",
+        "tags": ["links"]
+      },
+      "delete": {
+        "description": "Permanently delete a shortened link. Only the owner or admin can delete the link.",
+        "operationId": "LinkController_deleteLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique identifier of the link to delete",
+            "schema": { "example": 1, "type": "number" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Link deleted successfully" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Access denied - not the owner or admin" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Delete a shortened link",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/{id}/transfer": {
+      "put": {
+        "description": "Transfer ownership of a shortened link to another user. Only the current owner can transfer ownership.",
+        "operationId": "LinkController_transferOwnership",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique identifier of the link to transfer",
+            "schema": { "example": 1, "type": "number" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "New owner information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newOwnerId": {
+                    "type": "number",
+                    "example": 2,
+                    "description": "ID of the new owner"
+                  }
+                },
+                "required": ["newOwnerId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ownership transferred successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Access denied - only owner can transfer" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Transfer link ownership",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/{id}/stats": {
+      "get": {
+        "description": "Retrieve access statistics for a shortened link. Only the owner or admin can view statistics.",
+        "operationId": "LinkController_getLinkStats",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique identifier of the link",
+            "schema": { "example": 1, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "number", "example": 1 },
+                    "shortCode": { "type": "string", "example": "abc123" },
+                    "accessCount": { "type": "number", "example": 42 },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "isActive": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Access denied - not the owner or admin" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "Get link statistics",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/access/{shortCode}": {
+      "get": {
+        "description": "**PUBLIC ENDPOINT** - No authentication required. Retrieves link information to display on the landing page before redirecting. Shows security level, description, and page title to help users make informed decisions.",
+        "operationId": "LinkController_accessLink",
+        "parameters": [
+          {
+            "name": "shortCode",
+            "required": true,
+            "in": "path",
+            "description": "Short code of the link",
+            "schema": { "example": "abc123", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkAccessResponse" }
+              }
+            }
+          },
+          "400": { "description": "Link is not active" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "🌐 PUBLIC: Get link information for landing page",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/redirect/{shortCode}": {
+      "get": {
+        "description": "**PUBLIC ENDPOINT** - No authentication required. Directly redirects to the original URL without showing a landing page. Increments access count and validates link is active.",
+        "operationId": "LinkController_redirectToOriginalUrl",
+        "parameters": [
+          {
+            "name": "shortCode",
+            "required": true,
+            "in": "path",
+            "description": "Short code of the link",
+            "schema": { "example": "abc123", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Redirect information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "example": "https://www.psu.ac.th"
+                    },
+                    "redirect": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Link is not active" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "🌐 PUBLIC: Direct redirect to original URL",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/admin/search": {
+      "get": {
+        "description": "**ADMIN ONLY ENDPOINT** - Requires admin privileges. Search and retrieve all shortened links in the system regardless of owner. Used for administration and moderation purposes.",
+        "operationId": "LinkController_searchLinks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All links retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LinkEntry" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Admin access required" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "🔒 ADMIN: Search and list all links",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/admin/{shortCode}/disable": {
+      "put": {
+        "description": "**ADMIN ONLY ENDPOINT** - Requires admin privileges. Disable a shortened link by its short code. Disabled links cannot be accessed by users but remain in the database for audit purposes.",
+        "operationId": "LinkController_disableLinkByShortCode",
+        "parameters": [
+          {
+            "name": "shortCode",
+            "required": true,
+            "in": "path",
+            "description": "Short code of the link to disable",
+            "schema": { "example": "abc123", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link disabled successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Admin access required" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "🔒 ADMIN: Disable link by short code",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/links/admin/{shortCode}/view": {
+      "get": {
+        "description": "**ADMIN ONLY ENDPOINT** - Requires admin privileges. View detailed information about any shortened link by its short code. Used for administration, support, and moderation purposes.",
+        "operationId": "LinkController_viewLinkByShortCode",
+        "parameters": [
+          {
+            "name": "shortCode",
+            "required": true,
+            "in": "path",
+            "description": "Short code of the link to view",
+            "schema": { "example": "abc123", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LinkEntry" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Admin access required" },
+          "404": { "description": "Link not found" }
+        },
+        "security": [{ "access_token": [] }, { "access-token": [] }],
+        "summary": "🔒 ADMIN: View link details by short code",
+        "tags": ["links"]
+      }
+    },
+    "/link-api/auth/login": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Login credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "testuser" },
+                  "password": { "type": "string", "example": "password123" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "refresh_token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        },
+        "summary": "Login with username and password",
+        "tags": ["auth"]
+      }
+    },
+    "/link-api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "refresh_token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid refresh token" }
+        },
+        "summary": "Refresh access token using refresh token",
+        "tags": ["auth"]
+      }
+    },
+    "/link-api/auth/openid/verify-token": {
+      "post": {
+        "description": "**PUBLIC ENDPOINT** - No authentication required. Verify and process OpenID Connect token from external identity provider. Creates application session if token is valid.",
+        "operationId": "AuthController_verifyOpenIdToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "OpenID Connect token data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                },
+                "required": ["access_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "access_token": { "type": "string" },
+                    "refresh_token": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid token" }
+        },
+        "summary": "🌐 PUBLIC: Verify OpenID Connect token",
+        "tags": ["auth"]
+      }
+    },
+    "/link-api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logged out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Logout and clear authentication cookies",
+        "tags": ["auth"]
+      }
+    },
+    "/link-api/auth/me/info": {
+      "get": {
+        "operationId": "MeController_info",
+        "parameters": [],
+        "responses": { "200": { "description": "" } },
+        "tags": ["Me"]
+      }
+    },
+    "/link-api/auth/me/changePassword": {
+      "post": {
+        "operationId": "MeController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MeChangePasswordDto" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } },
+        "tags": ["Me"]
+      }
+    }
+  },
+  "info": {
+    "title": "PSU Link API",
+    "description": "URL shortener API for Prince of Songkla University",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    { "name": "auth", "description": "Authentication endpoints" },
+    { "name": "links", "description": "Link management endpoints" }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "cookie": {
+        "type": "http",
+        "in": "cookie",
+        "name": "access_token",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "CreateLinkDto": {
+        "type": "object",
+        "properties": {
+          "originalUrl": {
+            "type": "string",
+            "description": "Original URL to shorten",
+            "example": "https://www.psu.ac.th"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the link",
+            "example": "PSU Homepage"
+          },
+          "startDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link becomes active",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link expires",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "withLogo": {
+            "type": "boolean",
+            "description": "Include PSU logo in QR code",
+            "example": true
+          },
+          "qrSubtitle": {
+            "type": "string",
+            "description": "Subtitle for QR code",
+            "example": "Scan to visit PSU"
+          }
+        },
+        "required": ["originalUrl"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique user identifier",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique username",
+            "example": "admin"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name for the user",
+            "example": "System Admin"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password (hidden in responses)",
+            "writeOnly": true
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "admin@psu.ac.th"
+          },
+          "passwordUpdateRequired": {
+            "type": "boolean",
+            "description": "Whether user must update password on next login",
+            "example": false,
+            "default": true
+          },
+          "locked": {
+            "type": "boolean",
+            "description": "Whether user account is locked",
+            "example": false,
+            "default": false
+          },
+          "credentialVersion": {
+            "type": "number",
+            "description": "Internal credential version (hidden in responses)",
+            "writeOnly": true,
+            "default": 0
+          },
+          "authStrategy": {
+            "type": "string",
+            "description": "Authentication strategy used",
+            "enum": ["database", "openid"],
+            "example": "database",
+            "default": "database"
+          },
+          "isAdmin": {
+            "type": "boolean",
+            "description": "Whether user has admin privileges",
+            "example": false,
+            "default": false
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "passwordUpdateRequired",
+          "locked",
+          "credentialVersion",
+          "authStrategy",
+          "isAdmin"
+        ]
+      },
+      "LinkEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the link",
+            "example": 1
+          },
+          "shortCode": {
+            "type": "string",
+            "description": "Short code used in the URL",
+            "example": "abc123"
+          },
+          "originalUrl": {
+            "type": "string",
+            "description": "Original URL to redirect to",
+            "example": "https://www.psu.ac.th"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-provided description of the link",
+            "example": "PSU Homepage"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the link is enabled and accessible",
+            "example": true,
+            "default": true
+          },
+          "pageTitle": {
+            "type": "string",
+            "description": "Title of the target page (auto-detected)",
+            "example": "Prince of Songkla University"
+          },
+          "securityLevel": {
+            "type": "string",
+            "description": "Security assessment level",
+            "enum": ["safe", "moderate", "risky", "dangerous"],
+            "example": "moderate",
+            "default": "moderate"
+          },
+          "startDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link becomes active",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link expires",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "withLogo": {
+            "type": "boolean",
+            "description": "Whether QR code should include PSU logo",
+            "example": true,
+            "default": false
+          },
+          "qrSubtitle": {
+            "type": "string",
+            "description": "Subtitle text for QR code",
+            "example": "Scan to visit PSU"
+          },
+          "accessCount": {
+            "type": "number",
+            "description": "Number of times the link has been accessed",
+            "example": 42,
+            "default": 0
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link was created",
+            "example": "2024-01-01T10:30:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the link was last updated",
+            "example": "2024-01-02T15:45:00Z"
+          },
+          "securityLevelUpdatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When security level was last updated",
+            "example": "2024-01-01T12:00:00Z"
+          },
+          "createdBy": {
+            "description": "User who created this link",
+            "allOf": [{ "$ref": "#/components/schemas/User" }]
+          },
+          "createdById": {
+            "type": "number",
+            "description": "ID of the user who created this link",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "shortCode",
+          "originalUrl",
+          "enabled",
+          "securityLevel",
+          "withLogo",
+          "accessCount",
+          "createdAt",
+          "updatedAt",
+          "createdBy",
+          "createdById"
+        ]
+      },
+      "UpdateLinkDto": {
+        "type": "object",
+        "properties": {
+          "originalUrl": {
+            "type": "string",
+            "description": "Updated URL",
+            "example": "https://www.psu.ac.th/updated"
+          },
+          "description": {
+            "type": "string",
+            "description": "Updated description",
+            "example": "Updated PSU Homepage"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable or disable the link",
+            "example": true
+          },
+          "startDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Updated start date/time",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDateTime": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Updated end date/time",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "withLogo": {
+            "type": "boolean",
+            "description": "Updated logo setting",
+            "example": false
+          },
+          "qrSubtitle": {
+            "type": "string",
+            "description": "Updated QR subtitle",
+            "example": "Updated subtitle"
+          }
+        }
+      },
+      "LinkAccessResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number", "description": "Link ID", "example": 1 },
+          "shortCode": {
+            "type": "string",
+            "description": "Short code",
+            "example": "abc123"
+          },
+          "originalUrl": {
+            "type": "string",
+            "description": "Original URL",
+            "example": "https://www.psu.ac.th"
+          },
+          "description": {
+            "type": "string",
+            "description": "Link description",
+            "example": "PSU Homepage"
+          },
+          "pageTitle": {
+            "type": "string",
+            "description": "Page title",
+            "example": "Prince of Songkla University"
+          },
+          "securityLevel": {
+            "type": "string",
+            "description": "Security level",
+            "enum": ["safe", "moderate", "risky", "dangerous"],
+            "example": "moderate"
+          },
+          "securityLevelUpdatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When security was last updated",
+            "example": "2024-01-01T12:00:00Z"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether link is currently active",
+            "example": true
+          },
+          "accessCount": {
+            "type": "number",
+            "description": "Total access count",
+            "example": 42
+          }
+        },
+        "required": [
+          "id",
+          "shortCode",
+          "originalUrl",
+          "description",
+          "pageTitle",
+          "securityLevel",
+          "securityLevelUpdatedAt",
+          "isActive",
+          "accessCount"
+        ]
+      },
+      "MeChangePasswordDto": { "type": "object", "properties": {} }
+    }
+  }
+}

@@ -1,88 +1,244 @@
-# End-to-End Testing with Playwright
+# PSU Link Shortener E2E Tests
 
-This directory contains end-to-end tests for the bmk-next application using Playwright.
+End-to-end tests for the PSU Link Shortener application using Playwright.
 
-## Prerequisites
+## Test Structure
 
-- Node.js (version 18 or higher)
-- The main application running on `http://localhost:5173`
+### Test Files
 
-## Installation
+- `login.spec.ts` - Authentication and login flow tests
+- `dashboard.spec.ts` - Dashboard and link management tests
+- `public-links.spec.ts` - Public link access and landing page tests
+- `i18n-ui.spec.ts` - Internationalization and UI interaction tests
 
-1. Install dependencies:
+### Helper Files
+
+- `helpers/auth.ts` - Authentication helper functions
+- `helpers/test-data.ts` - Test data constants and utilities
+
+## Test Coverage
+
+### Authentication Tests
+- Login form validation
+- Successful login with valid credentials
+- Error handling for invalid credentials
+- Logout functionality
+- Protected route redirection
+- OIDC authentication (when configured)
+
+### Dashboard & Link Management Tests
+- Create new links with various options
+- Edit existing links
+- Delete links with confirmation
+- Search and filter functionality
+- QR code generation
+- Link statistics
+- Pagination and data grid interactions
+
+
+### Public Link Access Tests
+- Active link landing pages
+- Countdown timer functionality
+- Security level warnings
+- Expired/inactive link handling
+- Scheduled link behavior
+- 404 error pages
+- Mobile responsiveness
+- QR code display
+
+### UI & Internationalization Tests
+- Language switching (EN/TH)
+- Language preference persistence
+- Responsive design across devices
+- Touch interaction support
+- Keyboard navigation
+- Loading states
+- Error states
+- Form validation
+- Accessibility features
+
+## Configuration
+
+The tests are configured to:
+- Run against `http://localhost:5173` (development server)
+- Start the cln development server automatically
+- Take screenshots on failure
+- Record videos on failure
+- Generate HTML reports
+
+## Environment Variables
+
+Configure these environment variables for your test environment:
+
 ```bash
-npm install
-```
-
-2. Install Playwright browsers:
-```bash
-npm run install-browsers
+TEST_USERNAME=u0
+TEST_PASSWORD=1234
+TEST_ACTIVE_SHORTCODE=test123
+TEST_EXPIRED_SHORTCODE=expired123
+TEST_INACTIVE_SHORTCODE=inactive123
+TEST_SCHEDULED_SHORTCODE=scheduled123
+TEST_RISKY_SHORTCODE=risky123
 ```
 
 ## Running Tests
 
-### Basic test run
+### Install Dependencies
+```bash
+npm install
+npm run install-browsers
+```
+
+### Run All Tests
 ```bash
 npm test
 ```
 
-### Run tests in headed mode (see browser)
-```bash
-npm run test:headed
-```
-
-### Run tests with UI mode
+### Run Tests with UI
 ```bash
 npm run test:ui
 ```
 
-### Debug tests
+### Run Tests in Headed Mode
+```bash
+npm run test:headed
+```
+
+### Debug Tests
 ```bash
 npm run test:debug
 ```
 
-### View test report
+### Run Specific Test File
 ```bash
-npm run test:report
+npx playwright test login.spec.ts
 ```
 
-## Test Structure
+### Run Tests with Specific Tag
+```bash
+npx playwright test --grep "authentication"
+```
 
-- `tests/auth/` - Authentication related tests
-  - `login.spec.ts` - Login functionality tests
+## Test Data Requirements
 
-## Configuration
+For comprehensive test coverage, ensure your test environment has:
 
-The Playwright configuration is in `playwright.config.ts`. Key settings:
+1. **User Accounts:**
+   - Regular user account (username: u0, or set TEST_USERNAME)
 
-- **Base URL**: `http://localhost:5175`
-- **Browsers**: Chrome, Firefox, Safari
-- **Web Server**: Automatically starts the dev server before tests
-- **Reports**: HTML reports are generated automatically
+2. **Test Links:**
+   - Active link with short code (default: test123)
+   - Expired link with short code (default: expired123)
+   - Inactive/disabled link with short code (default: inactive123)
+   - Scheduled link with future start date (default: scheduled123)
+   - Link with risky security level (default: risky123)
 
-## Writing New Tests
+3. **Backend API:**
+   - Running backend API server
+   - Test database with appropriate seed data
+   - All endpoints functioning correctly
 
-1. Create test files with `.spec.ts` extension in the `tests/` directory
-2. Use the `test` and `expect` functions from `@playwright/test`
-3. Follow the existing patterns for page interactions
+## Best Practices
 
-Example:
+### Writing New Tests
+1. Use descriptive test names that explain the behavior being tested
+2. Group related tests using `test.describe()`
+3. Use helper functions for common operations (login, logout, etc.)
+4. Add appropriate timeouts for async operations
+5. Clean up test data when necessary
+6. Use data-testid attributes for reliable element selection
+
+### Page Object Pattern
+Consider implementing page objects for complex pages:
+
 ```typescript
-import { test, expect } from '@playwright/test';
-
-test('example test', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('h1')).toContainText('Expected Title');
-});
+// pages/LoginPage.ts
+export class LoginPage {
+  constructor(private page: Page) {}
+  
+  async login(username: string, password: string) {
+    await this.page.getByTestId('username-input').fill(username);
+    await this.page.getByTestId('password-input').fill(password);
+    await this.page.getByTestId('login-button').click();
+  }
+}
 ```
 
-## Current Tests
+### Test Isolation
+- Each test should be independent and not rely on other tests
+- Use `test.beforeEach()` for common setup
+- Clean up created data in `test.afterEach()` if needed
+- Use test-specific data to avoid conflicts
 
-### Login Tests
-- ✅ Successful login with admin/1234 credentials
-- ✅ Login form elements visibility
-- ✅ Empty form submission handling
+## Debugging
 
-The tests assume the application has a login endpoint that accepts:
-- Username: `admin`
-- Password: `1234` 
+### Debug Mode
+Run tests in debug mode to step through test execution:
+```bash
+npm run test:debug
+```
+
+### Screenshots and Videos
+Failed tests automatically capture:
+- Screenshots at the point of failure
+- Video recordings of the entire test run
+
+These are saved in the `test-results/` directory.
+
+### Trace Viewer
+Use Playwright's trace viewer for detailed debugging:
+```bash
+npx playwright show-trace test-results/trace.zip
+```
+
+### Console Logs
+Add console output in tests for debugging:
+```typescript
+console.log('Current URL:', page.url());
+console.log('Page title:', await page.title());
+```
+
+## Continuous Integration
+
+For CI/CD pipelines:
+
+1. **Install Dependencies:**
+```bash
+npm ci
+npx playwright install --with-deps
+```
+
+2. **Run Tests:**
+```bash
+npm test
+```
+
+3. **Upload Artifacts:**
+Configure your CI to upload test-results/ directory as artifacts for failed builds.
+
+### GitHub Actions Example
+```yaml
+- name: Run Playwright tests
+  run: npm test
+  
+- name: Upload test results
+  uses: actions/upload-artifact@v3
+  if: always()
+  with:
+    name: playwright-report
+    path: playwright-report/
+```
+
+## Known Issues and Limitations
+
+1. **External URL Testing:** Tests avoid actually visiting external URLs to prevent flaky tests
+2. **Email Testing:** Email functionality tests may require mock email services
+3. **File Upload:** File upload tests may need special handling for different browsers
+4. **Time-Dependent Tests:** Tests with countdown timers may be flaky in slow CI environments
+
+## Contributing
+
+When adding new tests:
+1. Follow the existing test structure and naming conventions
+2. Add appropriate test data constants to `helpers/test-data.ts`
+3. Update this README if adding new test categories
+4. Ensure tests pass in both local and CI environments
